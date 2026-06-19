@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "freebox-ddns"
+version = "0.1.0"
+description = "DynDNS client for LAN hosts behind a Freebox"
+requires-python = ">=3.11"
+dependencies = [
+    "freebox @ file:///home/gilles/work/freebox/python-freebox",
+    "httpx>=0.27",
+    "pyyaml>=6",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[project.scripts]
+freebox-ddns = "freebox_ddns.__main__:main"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/freebox_ddns"]

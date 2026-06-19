@@ -1,0 +1,56 @@
+# Example configuration for freebox-ddns
+
+freebox:
+  app_id: "net.grandou.freebox-ddns"
+  app_name: "Freebox DDNS"
+  app_version: "1.0"
+  device_name: "freebox-ddns"
+
+# Global DynDNS services (shared across multiple hosts).
+# A host can reference one by name and override any field.
+services:
+  noip:
+    url: "https://dynupdate.no-ip.com/nic/update"
+    login: "user@example.com"
+    password: "noip-password"
+
+  ovh:
+    url: "https://www.ovh.com/nic/update"
+    login: "mydomain.ovh"
+    password: "ovh-token"
+
+  dyndns:
+    url: "https://members.dyndns.org/v3/update"
+    login: "my-login"
+    password: "dyndns-password"
+
+hosts:
+  # Reference a global service, hostname defined locally
+  - freebox_name: "my-pc"
+    ipv4: true
+    ipv6: true
+    services:
+      - service: noip
+        hostname: "my-pc.example.com"
+
+  # Multiple services; login/password overridden for one of them
+  - freebox_name: "nas"
+    ipv4: true
+    ipv6: false
+    services:
+      - service: ovh
+        hostname: "nas.mydomain.ovh"
+      - service: noip
+        hostname: "nas.example.com"
+        login: "other-account@example.com"   # override
+        password: "other-password"           # override
+
+  # Inline service (no global reference)
+  - freebox_name: "raspberry"
+    ipv4: false
+    ipv6: true
+    services:
+      - hostname: "pi.example.com"
+        url: "https://dynupdate.no-ip.com/nic/update"
+        login: "user@example.com"
+        password: "noip-password"
