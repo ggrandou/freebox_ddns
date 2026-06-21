@@ -16,6 +16,7 @@ def setup_logging(foreground: bool, verbose: bool) -> None:
     level = logging.DEBUG if verbose else logging.INFO
     root = logging.getLogger()
     root.setLevel(level)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     if foreground:
         handler: logging.Handler = logging.StreamHandler(sys.stdout)
