@@ -24,6 +24,11 @@ services:
     login: "my-login"
     password: "dyndns-password"
 
+  infomaniak:
+    url: "https://infomaniak.com/nic/update"
+    login: "my-infomaniak-login"
+    password: "my-infomaniak-password"
+
 hosts:
   # Reference a global service, hostname defined locally
   - freebox_name: "my-pc"
