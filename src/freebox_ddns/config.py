@@ -56,13 +56,20 @@ def load(path: Path) -> Config:
 
     hosts: list[HostConfig] = []
     for h in data.get("hosts", []):
+        name = h["freebox_name"]
+        if "service" in h and "services" not in h:
+            raise ValueError(
+                f"Host '{name}': found 'service:' key — did you mean 'services:'?"
+            )
         services = [
             _resolve_service(s, global_services)
             for s in h.get("services", [])
         ]
+        if not services:
+            raise ValueError(f"Host '{name}' has no services configured")
         hosts.append(
             HostConfig(
-                freebox_name=h["freebox_name"],
+                freebox_name=name,
                 services=services,
                 ipv4=h.get("ipv4", True),
                 ipv6=h.get("ipv6", True),
