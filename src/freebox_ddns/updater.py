@@ -156,6 +156,8 @@ class Poller:
 
 def _is_gua(addr: str) -> bool:
     try:
-        return ipaddress.ip_address(addr).is_global
+        ip = ipaddress.ip_address(addr)
+        # Reject non-global and addresses with all-zero host part (Freebox API artefact)
+        return ip.is_global and ip.packed[-8:] != b"\x00" * 8
     except ValueError:
         return False
