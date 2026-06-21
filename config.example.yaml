@@ -45,6 +45,14 @@ hosts:
         login: "other-account@example.com"   # override
         password: "other-password"           # override
 
+  # The Freebox router itself (uses WAN IPv4 and WAN IPv6 from connection status)
+  - freebox_name: "freebox"
+    ipv4: true
+    ipv6: true
+    services:
+      - service: noip
+        hostname: "freebox.example.com"
+
   # Inline service (no global reference)
   - freebox_name: "raspberry"
     ipv4: false

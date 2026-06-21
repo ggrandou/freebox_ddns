@@ -6,6 +6,9 @@ from pathlib import Path
 import yaml
 
 
+FREEBOX_SELF = "freebox"  # reserved freebox_name meaning the Freebox router itself
+
+
 @dataclass
 class DyndnsService:
     url: str

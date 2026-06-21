@@ -10,7 +10,7 @@ from freebox import Freebox, CredentialStore
 
 from . import dyndns
 from .dyndns import UpdateResult
-from .config import Config, HostConfig
+from .config import Config, HostConfig, FREEBOX_SELF
 
 log = logging.getLogger(__name__)
 
@@ -54,14 +54,23 @@ class Poller:
 
     def poll(self) -> None:
         need_ipv4 = any(h.ipv4 for h in self.config.hosts)
-        need_ipv6 = any(h.ipv6 for h in self.config.hosts)
+        need_freebox_ipv6 = any(h.ipv6 and h.freebox_name == FREEBOX_SELF for h in self.config.hosts)
+        need_lan_ipv6 = any(h.ipv6 and h.freebox_name != FREEBOX_SELF for h in self.config.hosts)
 
-        current_ipv4 = self._wan_ipv4() if need_ipv4 else None
+        current_ipv4 = None
+        wan_ipv6 = None
+        if need_ipv4 or need_freebox_ipv6:
+            current_ipv4, wan_ipv6 = self._wan_status()
+            if not need_ipv4:
+                current_ipv4 = None
+
         current_ipv6: dict[str, str | None] = {}
-        if need_ipv6:
+        if need_freebox_ipv6:
+            current_ipv6[FREEBOX_SELF] = wan_ipv6
+        if need_lan_ipv6:
             hosts_lan = self.fb.lan.hosts("pub")
             for host in self.config.hosts:
-                if host.ipv6:
+                if host.ipv6 and host.freebox_name != FREEBOX_SELF:
                     current_ipv6[host.freebox_name] = self._host_ipv6(hosts_lan, host.freebox_name)
 
         ipv4_changed = current_ipv4 != self.last_ipv4
@@ -98,12 +107,13 @@ class Poller:
                 if host.ipv6 and not ipv6_transient:
                     self.last_ipv6[host.freebox_name] = cur_v6
 
-    def _wan_ipv4(self) -> str | None:
+    def _wan_status(self) -> tuple[str | None, str | None]:
+        """Return (ipv4, ipv6) from the WAN connection status."""
         status = self.fb.connection.status()
         if status.state != "up":
             log.warning("Freebox connection is not up (state: %s)", status.state)
-            return None
-        return status.ipv4
+            return None, None
+        return status.ipv4, status.ipv6
 
     def _host_ipv6(self, hosts_lan: list, name: str) -> str | None:
         """Return the active GUA IPv6 address of a LAN host, or None."""
