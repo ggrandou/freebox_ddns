@@ -1,39 +1,41 @@
-#!/bin/bash
+#!/bin/sh
 
-srcname="${BASH_SOURCE[0]}"
-dirname=$(dirname $srcname)
-
-venvdir=$dirname/.venv
-
-test -n "${BASH_SOURCE[1]}" || verbose=1
-
-if [[ ! -d $venvdir ]] || [[ $srcname == "$0" ]]; then
-    echo "setup virtual env $(realpath --relative-to=. $venvdir)"
-
-    python3 -m venv $venvdir
-    source $venvdir/bin/activate
-    pip3 install --upgrade --editable "$dirname[dev]"
+# Locate this script.
+# When run directly: $0 is the script path.
+# When sourced:      $_ holds the path used to source (ash and bash both set this).
+if [ "$(basename -- "$0")" = "setup_env.sh" ]; then
+    _direct=1
+    _self="$0"
+else
+    _direct=0
+    _self="${_:-./setup_env.sh}"
 fi
 
-if [[ $srcname == "$0" ]]; then
-    # setup
-    echo "now activate your virtual env with \"source $(realpath --relative-to=. $srcname)\""
-elif [ "${BASH_SOURCE[1]}" ]; then
-    # inside script
-    source $venvdir/bin/activate
+_dir=$(cd "$(dirname -- "$_self")" 2>/dev/null && pwd)
+: "${_dir:=$(pwd)}"
+venvdir=$_dir/.venv
+
+if [ ! -d "$venvdir" ] || [ "$_direct" = "1" ]; then
+    echo "setup virtual env $venvdir"
+    python3 -m venv "$venvdir"
+    . "$venvdir/bin/activate"
+    pip3 install --upgrade --editable "$_dir[dev]"
+fi
+
+if [ "$_direct" = "1" ]; then
+    echo "now activate your virtual env with \". $_self\""
 else
-    # inside shell
     echo "activate virtual env"
-    source $venvdir/bin/activate
+    . "$venvdir/bin/activate"
     echo "type \"deactivate\" to exit the virtual env"
 fi
 
-ROOTDIR=$(realpath $dirname)
+ROOTDIR=$_dir
 
-if ! [[ "$PATH" =~ "$ROOTDIR/tools:" ]]
-then
-    PATH="$ROOTDIR/tools:$PATH"
-fi
+case ":$PATH:" in
+    *":$ROOTDIR/tools:"*) ;;
+    *) PATH="$ROOTDIR/tools:$PATH" ;;
+esac
 
 export PATH
 export ROOTDIR
